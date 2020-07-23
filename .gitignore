@@ -1,0 +1,6 @@
+*.pdf
+*venv*
+*.idea*
+*logs*
+*output*
+
