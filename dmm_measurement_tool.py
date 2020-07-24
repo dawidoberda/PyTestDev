@@ -16,7 +16,7 @@ def measure(measure, address, limits):
     upper_limit = None
     limit_set = False
 
-    logging.basicConfig(filename='logs/dmm_log.log', level=logging.INFO)
+    logging.basicConfig(filename='logs/dmm_log.log', level=logging.INFO, format="%(asctime)s::%(name)s::%(levelname)s::%(message)s")
 
     connection_successful = dmm.connect(address)
     click.echo(connection_successful)
