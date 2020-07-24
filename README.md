@@ -8,7 +8,9 @@
 
 <h2>Project Description</h2>
 
-<div>Project Decription here</div>
+<div>This project is set of different packages and 
+executables scripts which can be used for Hardware Test
+Engineering Development. </div>
 
 <h2>Executable Scripts</h2>
 <div>After package install there are several modules which

@@ -23,5 +23,5 @@ setup(
             'korad_set=korad_control:set',
             'korad_get=korad_control:get'
         ]
-    }, install_requires=['click', 'pyvisa', 'numpy', 'pyserial']
+    }, install_requires=['click', 'pyvisa', 'numpy', 'pyserial', 'matplotlib']
 )
