@@ -1,6 +1,7 @@
 from setuptools import setup
 # trzeba to zainstalowac pip install --editable .
 # TODO: dodac kolejne pomiary do measurement_tool
+# TODO: dodac pakiet psu
 
 setup(
     name="PyTestDev",
@@ -14,5 +15,5 @@ setup(
             'dmm_test=dmm_test:test',
             'dmm_measure=dmm_measurement_tool:measure'
         ]
-    }, install_requires=['click', 'pyvisa', 'numpy']
+    }, install_requires=['click', 'pyvisa', 'numpy', 'pyserial']
 )
