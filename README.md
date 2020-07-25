@@ -12,6 +12,12 @@
 executables scripts which can be used for Hardware Test
 Engineering Development. </div>
 
+<h2>Packages Description</h2>
+<div>
+Below are listed all packages included in PyTest Dev together 
+with short description.
+</div>
+
 <h2>Executable Scripts</h2>
 <div>After package install there are several modules which
 can be called from command line. For more detailed information
