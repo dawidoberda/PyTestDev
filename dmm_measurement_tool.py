@@ -4,7 +4,13 @@ from configparser import ConfigParser
 import logging
 
 @click.command()
-@click.option('-m', '--measure', help='Arguments:res - 2 wire resistance; fres - 4 wire resistance')
+@click.option('-m', '--measure', help='Arguments:res - 2 wire resistance; fres - 4 wire resistance; vdc - measure dc voltage; vac - measure ac voltage; idc - measure dc current; iac - measure ac current; '
+                                      'av_res - avg of 10 measurements of 2 wire res;'
+                                      'av_fres - avg of 10 measurements of 4 wire res;'
+                                      'av_vdc - avg of 10 measurements of dc voltage;'
+                                      'av_vac - avg of 10 measurements of ac voltage;'
+                                      'av_idc - avg of 10 measurements of dc current;'
+                                      'av_iac - avg of 10 measurements of ac current')
 @click.option('-a', '--address', default='TCPIP0::K-34461A-09586.local::hislip0::INSTR', help='Argument: Visa address of dmm. Default is TCPIP0::K-34461A-09586.local::hislip0::INSTR')
 @click.option('-l', '--limits', default='0', help='Set limits for measurement [upper,lower]')
 def measure(measure, address, limits):
@@ -41,6 +47,76 @@ def measure(measure, address, limits):
         measured_value = dmm.measure_resistance_4wire()
         click.echo(f'Measured four wire resistance value is : {measured_value}')
         measured_type = '4 wire resistance'
+
+    if measure == "vdc":
+        click.echo("Measuring dc voltage...")
+        logging.info("Measuring dc voltage......")
+        measured_value = dmm.measure_voltage_dc()
+        click.echo(f'Measured dc voltage value is : {measured_value}')
+        measured_type = 'dc voltage'
+
+    if measure == "vac":
+        click.echo("Measuring ac voltage...")
+        logging.info("Measuring ac voltage......")
+        measured_value = dmm.measure_voltage_ac()
+        click.echo(f'Measured ac voltage value is : {measured_value}')
+        measured_type = 'ac voltage'
+
+    if measure == "idc":
+        click.echo("Measuring dc current...")
+        logging.info("Measuring dc current......")
+        measured_value = dmm.measure_current_dc()
+        click.echo(f'Measured dc current value is : {measured_value}')
+        measured_type = 'dc current'
+
+    if measure == "iac":
+        click.echo("Measuring ac current...")
+        logging.info("Measuring ac current......")
+        measured_value = dmm.measure_current_ac()
+        click.echo(f'Measured ac current value is : {measured_value}')
+        measured_type = 'ac current'
+
+    if measure == 'av_res':
+        click.echo("Measuring 10 avg of 2 wire res...")
+        logging.info("Measuring 10 avg of 2 wire res...")
+        measured_value, std_dev = dmm.calculate_average_RES_2wire()
+        click.echo(f'Calculated avg  value is : {measured_value}')
+        measured_type = '2 wire avg'
+
+    if measure == 'av_fres':
+        click.echo("Measuring 10 avg of 4 wire res...")
+        logging.info("Measuring 10 avg of 4 wire res...")
+        measured_value, std_dev = dmm.calculate_average_RES_4wire()
+        click.echo(f'Calculated avg  value is : {measured_value}')
+        measured_type = '4 wire avg'
+
+    if measure == 'av_vdc':
+        click.echo("Measuring 10 avg of dc voltage...")
+        logging.info("Measuring 10 avg of dc voltage...")
+        measured_value, std_dev = dmm.calculate_average_voltage_DC()
+        click.echo(f'Calculated avg  value is : {measured_value}')
+        measured_type = 'dc voltage avg'
+
+    if measure == 'av_vac':
+        click.echo("Measuring 10 avg of ac voltage...")
+        logging.info("Measuring 10 avg of ac voltage...")
+        measured_value, std_dev = dmm.calculate_average_voltage_AC()
+        click.echo(f'Calculated avg  value is : {measured_value}')
+        measured_type = 'ac voltage avg'
+
+    if measure == 'av_idc':
+        click.echo("Measuring 10 avg of dc current...")
+        logging.info("Measuring 10 avg of dc current...")
+        measured_value, std_dev = dmm.calculate_average_current_dc()
+        click.echo(f'Calculated avg  value is : {measured_value}')
+        measured_type = 'dc current avg'
+
+    if measure == 'av_iac':
+        click.echo("Measuring 10 avg of ac current...")
+        logging.info("Measuring 10 avg of ac current...")
+        measured_value, std_dev = dmm.calculate_average_current_ac()
+        click.echo(f'Calculated avg  value is : {measured_value}')
+        measured_type = 'ac current avg'
 
     #Limits check
     if limits == "0":

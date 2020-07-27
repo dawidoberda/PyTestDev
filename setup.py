@@ -1,7 +1,6 @@
 from setuptools import setup
 from os import path
 # trzeba to zainstalowac pip install --editable .
-# TODO: dodac kolejne pomiary do measurement_tool
 
 this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
