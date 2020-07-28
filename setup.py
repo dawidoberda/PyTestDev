@@ -22,5 +22,6 @@ setup(
             'korad_set=korad_control:set',
             'korad_get=korad_control:get'
         ]
-    }, install_requires=['click', 'pyvisa', 'numpy', 'pyserial', 'matplotlib', 'sounddevice', 'scipy', 'soundfile']
+    }, install_requires=['click', 'pyvisa', 'numpy', 'pyserial', 'matplotlib', 'sounddevice', 'scipy', 'soundfile',
+                         'pyqrcode', 'opencv-python']
 )
