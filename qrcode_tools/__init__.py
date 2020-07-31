@@ -1,2 +1,3 @@
 from qrcode_tools.qrcode_writer import QR_Writer
 from qrcode_tools.qrcode_reader import QR_Reader
+from qrcode_tools.qrcode_scanner import QR_scanner

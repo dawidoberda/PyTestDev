@@ -1,4 +1,4 @@
-#https://www.youtube.com/watch?v=N81PCpADwKQ
+#Stream z kamery ip powinien dzialac tak samo. Wystarczy w argumencie camera_number zamiast 0 podac adress http streamu
 
 import numpy as np
 import cv2

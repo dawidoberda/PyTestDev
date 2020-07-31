@@ -50,4 +50,10 @@ This module can by used to get values set or read from Korad
 PSU via serial port
 </div>
 </li>
+<li>
+<h4>qr_tool</h4>
+<div>
+This module can by used to write(generate) qr code to file, read qr_code from file and scan using camera. 
+</div>
+</li>
 </ol>
