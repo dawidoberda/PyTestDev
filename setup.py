@@ -25,5 +25,5 @@ setup(
             'qr_tool=qr_tool:tool'
         ]
     }, install_requires=['click', 'pyvisa', 'numpy', 'pyserial', 'matplotlib', 'sounddevice', 'scipy', 'soundfile',
-                         'pyqrcode', 'opencv-python', 'imutils']
+                         'pyqrcode', 'opencv-contrib-python', 'imutils']
 )

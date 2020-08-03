@@ -1,6 +1,9 @@
 *.pdf
-*venv*
+venv*
 *.idea*
 *logs*
 *output*
+*JT*
+*.jts
+PyTestDev.egg-info*
 
