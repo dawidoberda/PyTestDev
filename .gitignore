@@ -6,4 +6,5 @@ venv*
 *JT*
 *.jts
 PyTestDev.egg-info*
+*tmp*
 

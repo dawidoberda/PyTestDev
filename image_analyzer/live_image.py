@@ -24,11 +24,14 @@ class cv2_imageStream:
     Method to start live image
     :param frame_return: type bool; if true method fill return frame as ndarray
     """
-    def start_stream(self, frame_return):
+    def start_stream(self, frame_return, snap_path):
 
 
         cv2.putText(self.frame, "Press esc to close window", (30, 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
+        cv2.putText(self.frame, "Press s to take snap", (30, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
         cv2.imshow('Live Image', self.frame)
 
@@ -45,6 +48,8 @@ class cv2_imageStream:
             self.cap.release()
             cv2.destroyAllWindows()
             exit()
+        elif key == ord("s"):
+            cv2.imwrite(snap_path, self.frame)
 
         if frame_return == True:
             return self.frame
@@ -56,7 +61,7 @@ if __name__ == "__main__":
     im = cv2_imageStream(src)
     while True:
         try:
-            frame = im.start_stream(frame_return=False)
+            frame = im.start_stream(frame_return=False, snap_path="../output/snap.png")
             if frame.any() == None:
                 pass
             else:
