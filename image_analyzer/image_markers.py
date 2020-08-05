@@ -12,9 +12,9 @@ import json
 
 class Marker:
 
-    def generate_marker(self, id):
+    def generate_marker(self, id, size):
         aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
-        self.img = aruco.drawMarker(aruco_dict, id, 700)
+        self.img = aruco.drawMarker(aruco_dict, id, size)
         plt.imshow(self.img, cmap=mpl.cm.gray, interpolation="nearest")
         plt.show()
 
@@ -96,7 +96,7 @@ class Marker:
 
 if __name__ == "__main__":
     marker = Marker()
-    #marker.generate_marker(2)
+    #marker.generate_marker(2, 700)
     #file_path = os.path.join("../output", "gen_aruco_marker2.png")
     #marker.save_marker(file_path)
 
