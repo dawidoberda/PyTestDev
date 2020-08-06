@@ -36,9 +36,19 @@ class Marker:
         plt.imshow(frame_markers)
         plt.show()
 
-        for i in range(len(ids)):
-            rectangle = corners[i][0]
-        return rectangle
+        # for i in range(len(ids)):
+        #     rectangle = corners[i][0]
+        # return rectangle
+        i = 0
+        markers_dic = {}
+        for id in ids:
+            x = {int(id): corners[i].tolist()}
+            markers_dic.update(x)
+            i = i + 1
+        with open("./tmp/marker_position.txt", 'w') as outfile:
+            json.dump(markers_dic, outfile)
+
+        return frame_markers
 
     def show_marker_live(self, camera_number, snap_path, markers_path):
 
@@ -100,7 +110,7 @@ if __name__ == "__main__":
     #file_path = os.path.join("../output", "gen_aruco_marker2.png")
     #marker.save_marker(file_path)
 
-    #positions = marker.find_marker_position("../output/snap.png")
-    #print(positions)
+    positions = marker.find_marker_position("../output/snap.png")
+    print(positions)
 
-    marker.show_marker_live(0, snap_path="../output/snap_live.png", markers_path='../output/markers.txt')
+    #marker.show_marker_live(0, snap_path="../output/snap_live.png", markers_path='../output/markers.txt')
