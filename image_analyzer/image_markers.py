@@ -22,7 +22,7 @@ class Marker:
         plt.imshow(self.img, cmap=mpl.cm.gray, interpolation="nearest")
         plt.savefig(file)
 
-    def find_marker_position(self, image_path):
+    def find_marker_position(self, image_path, show_image):
         frame = cv2.imread(image_path)
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -32,9 +32,10 @@ class Marker:
         corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
         frame_markers = aruco.drawDetectedMarkers(frame.copy(), corners, ids)
 
-        plt.figure()
-        plt.imshow(frame_markers)
-        plt.show()
+        if show_image == True:
+            plt.figure()
+            plt.imshow(frame_markers)
+            plt.show()
 
         # for i in range(len(ids)):
         #     rectangle = corners[i][0]
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     #file_path = os.path.join("../output", "gen_aruco_marker2.png")
     #marker.save_marker(file_path)
 
-    positions = marker.find_marker_position("../output/snap.png")
+    positions = marker.find_marker_position("../output/snap.png", show_image= True)
     print(positions)
 
     #marker.show_marker_live(0, snap_path="../output/snap_live.png", markers_path='../output/markers.txt')
