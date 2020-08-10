@@ -5,6 +5,8 @@ from image_analyzer.image_markers import Marker
 import time
 import json
 import math
+import matplotlib.pyplot as plt
+from scipy import signal
 
 class SimensFocus:
 
@@ -23,10 +25,6 @@ class SimensFocus:
 
         #target = cv2.cvtColor(target, cv2.COLOR_BGR2GRAY)
         #cv2.imwrite("../output/target_gray.png", target)
-        x, y, color = target.shape
-        middle_size = 0
-        if x == 7000:
-            middle_size = 3000
 
         time.sleep(1)
         target_tmp = marker.find_marker_position(image_path=filename, show_image=False)
@@ -60,37 +58,81 @@ class SimensFocus:
         #MARKER 0
         marker0_width = marker0_corner1[0] - marker0_corner0[0]
         marker0_height = marker0_corner3[1] - marker0_corner0[1]
-        marker0_middle_X = int((marker0_width/2) + marker0_corner0[0])
-        marker0_middle_Y = int((marker0_height/2) + marker0_corner0[1])
-        cv2.drawMarker(target_tmp, (marker0_middle_X, marker0_middle_Y), (0,0,255), cv2.MARKER_CROSS, 100,20,16)
+        marker0_middle_X = (marker0_width/2) + marker0_corner0[0]
+        marker0_middle_Y = (marker0_height/2) + marker0_corner0[1]
+        marker0_middle_point = (int(marker0_middle_X), int(marker0_middle_Y))
+        cv2.drawMarker(target_tmp, (int(marker0_middle_X), int(marker0_middle_Y)), (0,0,255), cv2.MARKER_CROSS, 100,20,16)
 
         # MARKER 1
         marker1_width = marker1_corner1[0] - marker1_corner0[0]
         marker1_height = marker1_corner3[1] - marker1_corner0[1]
-        marker1_middle_X = int((marker1_width / 2) + marker1_corner0[0])
-        marker1_middle_Y = int((marker1_height / 2) + marker1_corner0[1])
-        cv2.drawMarker(target_tmp, (marker1_middle_X, marker1_middle_Y), (0, 0, 255), cv2.MARKER_CROSS, 100, 20, 16)
+        marker1_middle_X = (marker1_width / 2) + marker1_corner0[0]
+        marker1_middle_Y = (marker1_height / 2) + marker1_corner0[1]
+        marker1_middle_point = (int(marker1_middle_X), int(marker1_middle_Y))
+        cv2.drawMarker(target_tmp, (int(marker1_middle_X), int(marker1_middle_Y)), (0, 0, 255), cv2.MARKER_CROSS, 100, 20, 16)
 
         # MARKER 2
         marker2_width = marker2_corner1[0] - marker2_corner0[0]
         marker2_height = marker2_corner3[1] - marker2_corner0[1]
-        marker2_middle_X = int((marker2_width / 2) + marker2_corner0[0])
-        marker2_middle_Y = int((marker2_height / 2) + marker2_corner0[1])
-        cv2.drawMarker(target_tmp, (marker2_middle_X, marker2_middle_Y), (0, 0, 255), cv2.MARKER_CROSS, 100, 20, 16)
+        marker2_middle_X = (marker2_width / 2) + marker2_corner0[0]
+        marker2_middle_Y = (marker2_height / 2) + marker2_corner0[1]
+        marker2_middle_point = (int(marker2_middle_X), int(marker2_middle_Y))
+        cv2.drawMarker(target_tmp, (int(marker2_middle_X), int(marker2_middle_Y)), (0, 0, 255), cv2.MARKER_CROSS, 100, 20, 16)
 
         # MARKER 3
         marker3_width = marker3_corner1[0] - marker3_corner0[0]
         marker3_height = marker3_corner3[1] - marker3_corner0[1]
-        marker3_middle_X = int((marker3_width / 2) + marker3_corner0[0])
-        marker3_middle_Y = int((marker3_height / 2) + marker3_corner0[1])
-        cv2.drawMarker(target_tmp, (marker3_middle_X, marker3_middle_Y), (0, 0, 255), cv2.MARKER_CROSS, 100, 20, 16)
+        marker3_middle_X = (marker3_width / 2) + marker3_corner0[0]
+        marker3_middle_Y = (marker3_height / 2) + marker3_corner0[1]
+        marker3_middle_point = (int(marker3_middle_X), int(marker3_middle_Y))
+        cv2.drawMarker(target_tmp, (int(marker3_middle_X), int(marker3_middle_Y)), (0, 0, 255), cv2.MARKER_CROSS, 100, 20, 16)
 
-        simensStar_middle_X = int(((marker2_middle_X - marker0_middle_X)/2) + marker0_middle_X)
-        simensStar_middle_Y = int(((marker1_middle_Y - marker0_middle_Y)/2) + marker0_middle_Y)
+        length = marker2_middle_X - marker0_middle_X
+        factor = 2
+        middle_size = length/factor
+        print(middle_size)
+        max_r = int((middle_size / 2) - 50)
+        print(max_r)
 
-        cv2.drawMarker(target_tmp, (simensStar_middle_X, simensStar_middle_Y), (0, 255, 0), cv2.MARKER_SQUARE, middle_size, 20, 8)
+        #TODO: juz coraz lepiej wyznacza srodek ale jeszcze nad tym popracowac. trzeba by tez wygladzic dane do MTF + moze lepiej linie trendu rysowac. moze odrzucic te dziwne bledy
+
+        line02 = cv2.line(target_tmp, marker0_middle_point, marker2_middle_point, (0, 0, 255), 4, 2)
+        line02_mid_point = (int((marker0_middle_point[0]+marker2_middle_point[0])/2), int((marker0_middle_point[1]+marker2_middle_point[1])/2))
+        cv2.drawMarker(target_tmp, line02_mid_point, (0,255,0), cv2.MARKER_CROSS, 20,4,2)
+
+        line13 = cv2.line(target_tmp, marker1_middle_point, marker3_middle_point, (0, 0, 255), 4, 2)
+        line13_mid_point = (int((marker1_middle_point[0] + marker3_middle_point[0]) / 2),
+                            int((marker1_middle_point[1] + marker3_middle_point[1]) / 2))
+        cv2.drawMarker(target_tmp, line13_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
+
+        line01 = cv2.line(target_tmp, marker0_middle_point, marker1_middle_point, (0, 0, 255), 4, 2)
+        line01_mid_point = (int((marker0_middle_point[0] + marker1_middle_point[0]) / 2),
+                            int((marker0_middle_point[1] + marker1_middle_point[1]) / 2))
+        cv2.drawMarker(target_tmp, line01_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
+
+        line23 = cv2.line(target_tmp, marker2_middle_point, marker3_middle_point, (0, 0, 255), 4, 2)
+        line23_mid_point = (int((marker2_middle_point[0] + marker3_middle_point[0]) / 2),
+                            int((marker2_middle_point[1] + marker3_middle_point[1]) / 2))
+        cv2.drawMarker(target_tmp, line23_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
+
+        vertical_middle_line = cv2.line(target_tmp, line02_mid_point, line13_mid_point,(52,174,235) , 4, 2)
+        horizontal_middle_line = cv2.line(target_tmp, line01_mid_point, line23_mid_point,(52,174,235) , 4, 2)
+
+        simensStar_middle_X = ((line02_mid_point[0] * line13_mid_point[1] - line02_mid_point[1] * line13_mid_point[0]) * (line01_mid_point[0] - line23_mid_point[0]) - (line02_mid_point[0] - line13_mid_point[0]) * (line01_mid_point[0] * line23_mid_point[1] - line01_mid_point[1] * line23_mid_point[0])) / (
+                    (line02_mid_point[0] - line13_mid_point[0]) * (line01_mid_point[1] - line23_mid_point[1]) - (line02_mid_point[1] - line13_mid_point[1]) * (line01_mid_point[0] - line23_mid_point[0]))
+        simensStar_middle_Y = ((line02_mid_point[0] * line13_mid_point[1] - line02_mid_point[1] * line13_mid_point[0]) * (line01_mid_point[1] - line23_mid_point[1]) - (line02_mid_point[1] - line13_mid_point[1]) * (line01_mid_point[0] * line23_mid_point[1] - line01_mid_point[1] * line23_mid_point[0])) / (
+                    (line02_mid_point[0] - line13_mid_point[0]) * (line01_mid_point[1] - line23_mid_point[1]) - (line02_mid_point[1] - line13_mid_point[1]) * (line01_mid_point[0] - line23_mid_point[0]))
+
+        cv2.drawMarker(target_tmp, (int(simensStar_middle_X), int(simensStar_middle_Y)), (205, 18, 230), cv2.MARKER_CROSS,
+                       20, 4, 2)
+
+
+        cv2.drawMarker(target_tmp, (int(simensStar_middle_X), int(simensStar_middle_Y)), (0, 255, 0), cv2.MARKER_SQUARE, int(middle_size), 20, 8)
         target_gray = cv2.cvtColor(target_tmp, cv2.COLOR_BGR2GRAY)
-        for r in range(1450, 50, -10):
+        SFR_list = []
+        circuit_list = []
+        MTF = []
+        for r in range(max_r, 10, -10):
             points = []
             contrast = []
             for alfa_deg in range(1, 360, 1):
@@ -104,13 +146,52 @@ class SimensFocus:
                 c = target_gray[px, py]
                 contrast.append(c)
                 cv2.circle(target_tmp, (px, py), 1, (0, 0, 255), 1, 1) #for debug
-            print(contrast)
-            #TODO : zrobic max i min i wtedy intens
+            #print(contrast)
+            circuit = int(2 * math.pi * r)
+            circuit_list.append(circuit)
+            print(f'circuit = {circuit}')
+            #Looking for line-pair only for biggest resolution. In theory it is the same for all radious.
+            if r == max_r:
+                peaks = signal.find_peaks(contrast)
+                peaks_list = list(peaks[0])
+                peaks_qty = len(peaks_list)
+                print(f'number of peaks = {peaks_qty}')
+
+            SFR = peaks_qty / circuit #SFR is in lp/pixel
+            SFR_list.append(SFR)
+            print(f'SFR = {SFR} lp/pixel')
+            Imax = max(contrast)
+            Imin = min(contrast)
+            print(f'Imax = {Imax}')
+            print(f'Imin = {Imin}')
+            Modulation = (Imax - Imin) / (Imax + Imin)
+            MTF.append(Modulation)
+            print(f'Modulation = {Modulation}')
+
+        plt.figure(1)
+        plt.plot(circuit_list, SFR_list)
+        plt.title('SFR / Circuit ')
+        plt.xlabel('Circuit [pixel]')
+        plt.ylabel('SFR [lp/pixel]')
+        #plt.show()
+        plt.savefig('../output/SFR_middle_simens.png')
+
+        #TODO: zrobic rysowanie MTF(SFR)
+
+        plt.figure(2)
+        plt.plot(SFR_list, MTF)
+        plt.title('MTF Middle')
+        plt.xlabel('SFR [lp/pixel]')
+        plt.ylabel('MTF')
+        #plt.show()
+        plt.savefig('../output/MTF_Middle.png')
 
 
         cv2.imwrite("tmp/target_tmp.png", target_tmp)
 
 if __name__ == "__main__":
     focusTest = SimensFocus()
-    filename = "..\\output\\target.png"
+    #filename = "..\\output\\target.png"
+    #filename = "..\\output\\target_7x5.png"
+    filename = "..\\output\\target_photo.png"
     result = focusTest.middle_focus(filename)
