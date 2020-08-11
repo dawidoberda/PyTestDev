@@ -6,25 +6,36 @@ class Generator:
 
     def generate(self, markers_qty, small_perif, corners, middle, edges):
         #TODO: dopisac dodawanie innych kształtow w celu definiowania innego targetu
+        blank_image = 255 * np.ones(shape=[1000, 1000, 3], dtype=np.uint8)
+
         if small_perif =='simens':
             im_small_perif = cv2.imread("image\simens_star.png")
         elif small_perif =='slanted_edge':
             im_small_perif = cv2.imread("image/slanted_edge_57.png")
+        elif small_perif == None:
+            im_small_perif = blank_image
 
         if corners == "slanted_edge":
             im_corners = cv2.imread("image/slanted_edge_57.png")
         elif corners == 'simens':
             im_corners = cv2.imread("image\simens_star.png")
+        elif corners == None:
+            im_corners = blank_image
 
         if middle == "simens":
-            im_middle = cv2.imread("image\simens_star.png")
+            #im_middle = cv2.imread("image\simens_star.png")
+            im_middle = cv2.imread("image\star-chart_with_middle_120spoke.png")
         elif middle == "slanted_edge":
             im_middle = cv2.imread("image/slanted_edge_57.png")
+        elif middle == None:
+            im_middle = blank_image
 
         if edges == "slanted_edge":
             im_edges = cv2.imread("image/slanted_edge_57.png")
         elif edges == "simens":
             im_edges = cv2.imread("image\simens_star.png")
+        elif edges == None:
+            im_edges = blank_image
 
 
         if markers_qty ==4:
@@ -78,7 +89,7 @@ class Generator:
             imageCut22 = im_middle[2 * widthX:3 * widthX, 2 * widthY:3 * widthY]
 
 
-            blank_image = 255 * np.ones(shape=[1000, 1000, 3], dtype=np.uint8)
+
 
             # col0 = np.vstack([ms[0], im_small_perif, blank_image, im_edges, blank_image, im_small_perif, ms[1]])
             # col1 = np.vstack([im_small_perif, im_corners, blank_image, blank_image, blank_image, im_corners, im_small_perif])
@@ -99,7 +110,7 @@ class Generator:
             target = np.vstack([col0, col1, col2, col3, col4])
 
             #cv2.imwrite('../output/target.png', target)
-            cv2.imwrite('../output/target_7x5.png', target)
+            cv2.imwrite('../output/target_test.png', target)
 
 
         elif markers_qty == 6:
@@ -111,4 +122,5 @@ class Generator:
 
 if __name__ == "__main__":
     target = Generator()
-    target.generate(markers_qty=4, small_perif='simens', corners='slanted_edge', middle='simens', edges='slanted_edge')
+    #target.generate(markers_qty=4, small_perif='simens', corners='slanted_edge', middle='simens', edges='slanted_edge')
+    target.generate(markers_qty=4, small_perif=None, corners=None, middle='simens', edges='slanted_edge')

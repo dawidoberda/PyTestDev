@@ -96,68 +96,105 @@ class SimensFocus:
 
         #TODO: juz coraz lepiej wyznacza srodek ale jeszcze nad tym popracowac. trzeba by tez wygladzic dane do MTF + moze lepiej linie trendu rysowac. moze odrzucic te dziwne bledy
 
-        line02 = cv2.line(target_tmp, marker0_middle_point, marker2_middle_point, (0, 0, 255), 4, 2)
         line02_mid_point = (int((marker0_middle_point[0]+marker2_middle_point[0])/2), int((marker0_middle_point[1]+marker2_middle_point[1])/2))
-        cv2.drawMarker(target_tmp, line02_mid_point, (0,255,0), cv2.MARKER_CROSS, 20,4,2)
 
-        line13 = cv2.line(target_tmp, marker1_middle_point, marker3_middle_point, (0, 0, 255), 4, 2)
         line13_mid_point = (int((marker1_middle_point[0] + marker3_middle_point[0]) / 2),
                             int((marker1_middle_point[1] + marker3_middle_point[1]) / 2))
-        cv2.drawMarker(target_tmp, line13_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
 
-        line01 = cv2.line(target_tmp, marker0_middle_point, marker1_middle_point, (0, 0, 255), 4, 2)
         line01_mid_point = (int((marker0_middle_point[0] + marker1_middle_point[0]) / 2),
                             int((marker0_middle_point[1] + marker1_middle_point[1]) / 2))
-        cv2.drawMarker(target_tmp, line01_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
 
-        line23 = cv2.line(target_tmp, marker2_middle_point, marker3_middle_point, (0, 0, 255), 4, 2)
         line23_mid_point = (int((marker2_middle_point[0] + marker3_middle_point[0]) / 2),
                             int((marker2_middle_point[1] + marker3_middle_point[1]) / 2))
-        cv2.drawMarker(target_tmp, line23_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
-
-        vertical_middle_line = cv2.line(target_tmp, line02_mid_point, line13_mid_point,(52,174,235) , 4, 2)
-        horizontal_middle_line = cv2.line(target_tmp, line01_mid_point, line23_mid_point,(52,174,235) , 4, 2)
 
         simensStar_middle_X = ((line02_mid_point[0] * line13_mid_point[1] - line02_mid_point[1] * line13_mid_point[0]) * (line01_mid_point[0] - line23_mid_point[0]) - (line02_mid_point[0] - line13_mid_point[0]) * (line01_mid_point[0] * line23_mid_point[1] - line01_mid_point[1] * line23_mid_point[0])) / (
                     (line02_mid_point[0] - line13_mid_point[0]) * (line01_mid_point[1] - line23_mid_point[1]) - (line02_mid_point[1] - line13_mid_point[1]) * (line01_mid_point[0] - line23_mid_point[0]))
         simensStar_middle_Y = ((line02_mid_point[0] * line13_mid_point[1] - line02_mid_point[1] * line13_mid_point[0]) * (line01_mid_point[1] - line23_mid_point[1]) - (line02_mid_point[1] - line13_mid_point[1]) * (line01_mid_point[0] * line23_mid_point[1] - line01_mid_point[1] * line23_mid_point[0])) / (
                     (line02_mid_point[0] - line13_mid_point[0]) * (line01_mid_point[1] - line23_mid_point[1]) - (line02_mid_point[1] - line13_mid_point[1]) * (line01_mid_point[0] - line23_mid_point[0]))
 
-        cv2.drawMarker(target_tmp, (int(simensStar_middle_X), int(simensStar_middle_Y)), (205, 18, 230), cv2.MARKER_CROSS,
-                       20, 4, 2)
-
-
-        cv2.drawMarker(target_tmp, (int(simensStar_middle_X), int(simensStar_middle_Y)), (0, 255, 0), cv2.MARKER_SQUARE, int(middle_size), 20, 8)
+        siemensX = 0
+        siemensY = 0
+        #find pizza marker
         target_gray = cv2.cvtColor(target_tmp, cv2.COLOR_BGR2GRAY)
+        print(f'y1 = {int(simensStar_middle_X - (middle_size/2)+50)}')
+        print(f'y2 = {int(simensStar_middle_X + (middle_size/2)+50)}')
+        print(f'x1 = {int(simensStar_middle_Y - (middle_size/2)+50)}')
+        print(f'x2 = {int(simensStar_middle_Y + (middle_size/2)+50)}')
+        siemens_estimated_position = target_tmp[int(simensStar_middle_Y - (middle_size/2)-50):int(simensStar_middle_Y + (middle_size/2)+50),
+                                     int(simensStar_middle_X - (middle_size/2)-50):int(simensStar_middle_X + (middle_size/2)+50)]
+
+        siemens_estimated_position_grey = cv2.cvtColor(siemens_estimated_position, cv2.COLOR_BGR2GRAY)
+        #template = cv2.imread('./image/pizza_marker.png')
+        template = cv2.imread('./image/template.PNG')
+        template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+        w, h = template.shape[::-1]
+        print(f'w= {w} ; h = {h}')
+        res = cv2.matchTemplate(siemens_estimated_position_grey, template, cv2.TM_CCOEFF_NORMED)
+
+        #FOR DEBUG OF MATCH TEMPLATE
+        # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        # cv2.resizeWindow('image', 1920, 1080)
+        # cv2.imshow('image', res)
+        # key = cv2.waitKey(0)
+        #
+        # cv2.destroyAllWindows()
+
+        threshold = 0.7
+        loc = np.where(res >= threshold)
+        print(loc)
+        for pt in zip(*loc[::-1]):
+            # cv2.rectangle(siemens_estimated_position, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
+            cv2.drawMarker(siemens_estimated_position, (pt[0]+int(w/2), pt[1]+int(h/2)), (0,0,255), cv2.MARKER_CROSS, 20, 4, 2)
+            siemensX = pt[0]+int(w/2)
+            siemensY = pt[1]+int(h/2)
+
+
+        #DRAW MARKERS AND LINES
+        line02 = cv2.line(target_tmp, marker0_middle_point, marker2_middle_point, (0, 0, 255), 4, 2)
+        cv2.drawMarker(target_tmp, line02_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
+        line13 = cv2.line(target_tmp, marker1_middle_point, marker3_middle_point, (0, 0, 255), 4, 2)
+        cv2.drawMarker(target_tmp, line13_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
+        line01 = cv2.line(target_tmp, marker0_middle_point, marker1_middle_point, (0, 0, 255), 4, 2)
+        cv2.drawMarker(target_tmp, line01_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
+        line23 = cv2.line(target_tmp, marker2_middle_point, marker3_middle_point, (0, 0, 255), 4, 2)
+        cv2.drawMarker(target_tmp, line23_mid_point, (0, 255, 0), cv2.MARKER_CROSS, 20, 4, 2)
+        vertical_middle_line = cv2.line(target_tmp, line02_mid_point, line13_mid_point, (52, 174, 235), 4, 2)
+        horizontal_middle_line = cv2.line(target_tmp, line01_mid_point, line23_mid_point, (52, 174, 235), 4, 2)
+        cv2.drawMarker(target_tmp, (int(simensStar_middle_X), int(simensStar_middle_Y)), (205, 18, 230),
+                       cv2.MARKER_CROSS, 20, 4, 2)
+        cv2.drawMarker(target_tmp, (int(simensStar_middle_X), int(simensStar_middle_Y)), (0, 255, 0), cv2.MARKER_SQUARE, int(middle_size), 20, 8)
+
         SFR_list = []
         circuit_list = []
         MTF = []
-        for r in range(max_r, 10, -10):
+        max_r = int((w/2) * 7.5)
+        print(max_r)
+        for r in range(max_r, int((w/2)-30), -10):
             points = []
             contrast = []
             for alfa_deg in range(1, 360, 1):
-                alfa_rad = (alfa_deg*math.pi)/180
+                alfa_rad = (alfa_deg * math.pi) / 180
                 x = r * math.cos(alfa_rad)
                 y = r * math.sin(alfa_rad)
-                px = int(simensStar_middle_X - x)
-                py = int(simensStar_middle_Y - y)
+                px = int(siemensX - x)
+                py = int(siemensY - y)
                 p = [px, py]
                 points.append(p)
-                c = target_gray[px, py]
+                c = siemens_estimated_position_grey[px, py]
                 contrast.append(c)
-                cv2.circle(target_tmp, (px, py), 1, (0, 0, 255), 1, 1) #for debug
-            #print(contrast)
+                cv2.circle(siemens_estimated_position, (px, py), 1, (0, 0, 255), 1, 1)  # for debug
+            # print(contrast)
             circuit = int(2 * math.pi * r)
             circuit_list.append(circuit)
             print(f'circuit = {circuit}')
-            #Looking for line-pair only for biggest resolution. In theory it is the same for all radious.
+            # Looking for line-pair only for biggest resolution. In theory it is the same for all radious.
             if r == max_r:
                 peaks = signal.find_peaks(contrast)
                 peaks_list = list(peaks[0])
                 peaks_qty = len(peaks_list)
                 print(f'number of peaks = {peaks_qty}')
 
-            SFR = peaks_qty / circuit #SFR is in lp/pixel
+            SFR = peaks_qty / circuit  # SFR is in lp/pixel
             SFR_list.append(SFR)
             print(f'SFR = {SFR} lp/pixel')
             Imax = max(contrast)
@@ -168,6 +205,45 @@ class SimensFocus:
             MTF.append(Modulation)
             print(f'Modulation = {Modulation}')
 
+        # SFR_list = []
+        # circuit_list = []
+        # MTF = []
+        # for r in range(max_r, 10, -10):
+        #     points = []
+        #     contrast = []
+        #     for alfa_deg in range(1, 360, 1):
+        #         alfa_rad = (alfa_deg*math.pi)/180
+        #         x = r * math.cos(alfa_rad)
+        #         y = r * math.sin(alfa_rad)
+        #         px = int(simensStar_middle_X - x)
+        #         py = int(simensStar_middle_Y - y)
+        #         p = [px, py]
+        #         points.append(p)
+        #         c = target_gray[px, py]
+        #         contrast.append(c)
+        #         cv2.circle(target_tmp, (px, py), 1, (0, 0, 255), 1, 1) #for debug
+        #     #print(contrast)
+        #     circuit = int(2 * math.pi * r)
+        #     circuit_list.append(circuit)
+        #     print(f'circuit = {circuit}')
+        #     #Looking for line-pair only for biggest resolution. In theory it is the same for all radious.
+        #     if r == max_r:
+        #         peaks = signal.find_peaks(contrast)
+        #         peaks_list = list(peaks[0])
+        #         peaks_qty = len(peaks_list)
+        #         print(f'number of peaks = {peaks_qty}')
+        #
+        #     SFR = peaks_qty / circuit #SFR is in lp/pixel
+        #     SFR_list.append(SFR)
+        #     print(f'SFR = {SFR} lp/pixel')
+        #     Imax = max(contrast)
+        #     Imin = min(contrast)
+        #     print(f'Imax = {Imax}')
+        #     print(f'Imin = {Imin}')
+        #     Modulation = (Imax - Imin) / (Imax + Imin)
+        #     MTF.append(Modulation)
+        #     print(f'Modulation = {Modulation}')
+
         plt.figure(1)
         plt.plot(circuit_list, SFR_list)
         plt.title('SFR / Circuit ')
@@ -176,7 +252,6 @@ class SimensFocus:
         #plt.show()
         plt.savefig('../output/SFR_middle_simens.png')
 
-        #TODO: zrobic rysowanie MTF(SFR)
 
         plt.figure(2)
         plt.plot(SFR_list, MTF)
@@ -186,12 +261,13 @@ class SimensFocus:
         #plt.show()
         plt.savefig('../output/MTF_Middle.png')
 
-
+        cv2.imwrite('tmp/siemens_estimated_position.png', siemens_estimated_position)
         cv2.imwrite("tmp/target_tmp.png", target_tmp)
 
 if __name__ == "__main__":
     focusTest = SimensFocus()
     #filename = "..\\output\\target.png"
     #filename = "..\\output\\target_7x5.png"
-    filename = "..\\output\\target_photo.png"
+    filename = "..\\output\\test_target_photo.png"
+    #filename = "..\\output\\target_test.png"
     result = focusTest.middle_focus(filename)
