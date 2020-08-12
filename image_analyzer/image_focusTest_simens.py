@@ -94,7 +94,6 @@ class SimensFocus:
         max_r = int((middle_size / 2) - 50)
         print(max_r)
 
-        #TODO: juz coraz lepiej wyznacza srodek ale jeszcze nad tym popracowac. trzeba by tez wygladzic dane do MTF + moze lepiej linie trendu rysowac. moze odrzucic te dziwne bledy
 
         line02_mid_point = (int((marker0_middle_point[0]+marker2_middle_point[0])/2), int((marker0_middle_point[1]+marker2_middle_point[1])/2))
 
@@ -131,17 +130,23 @@ class SimensFocus:
         print(f'w= {w} ; h = {h}')
         res = cv2.matchTemplate(siemens_estimated_position_grey, template, cv2.TM_CCOEFF_NORMED)
 
-        #FOR DEBUG OF MATCH TEMPLATE
-        # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-        # cv2.resizeWindow('image', 1920, 1080)
-        # cv2.imshow('image', res)
-        # key = cv2.waitKey(0)
-        #
-        # cv2.destroyAllWindows()
+        # FOR DEBUG OF MATCH TEMPLATE
+        cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        cv2.resizeWindow('image', 1920, 1080)
+        cv2.imshow('image', res)
+        key = cv2.waitKey(0)
+
+        cv2.destroyAllWindows()
 
         threshold = 0.7
+        maximum = np.amax(res)
+        print(maximum)
         loc = np.where(res >= threshold)
         print(loc)
+
+        if loc[0].size == 0:
+            raise ValueError('Mach template array is empty ! Template not found')
+
         for pt in zip(*loc[::-1]):
             # cv2.rectangle(siemens_estimated_position, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
             cv2.drawMarker(siemens_estimated_position, (pt[0]+int(w/2), pt[1]+int(h/2)), (0,0,255), cv2.MARKER_CROSS, 20, 4, 2)
@@ -169,11 +174,33 @@ class SimensFocus:
         MTF = []
         max_r = int((w/2) * 7.5)
         print(max_r)
+        Spoke = 144
+
+        #Calculation of Circuits
         for r in range(max_r, int((w/2)-30), -10):
+            circuit = int(2 * math.pi * r)
+            circuit_list.append(circuit)
+            # print(f'circuit = {circuit}')
+
+        #Calculation of SFR
+        for circuit in circuit_list:
+            SFR = Spoke / circuit  # SFR is in lp/pixel
+            SFR_list.append(SFR)
+            # print(f'SFR = {SFR} lp/pixel')
+
+
+        fts = (2 * Spoke) / circuit_list[0] # fts = 2 * SFR due to Nyquist rule, sampling freq is the same for all cicruits so only one is calculated
+        probe_point_qty = circuit_list[0] * fts  #so it's equal to 2 * spoke
+
+        sample_contrast = []
+
+        for r in range(max_r, int((w / 2) - 30), -10):
             points = []
             contrast = []
-            for alfa_deg in range(1, 360, 1):
-                alfa_rad = (alfa_deg * math.pi) / 180
+
+            for alfa_deg in range(1, 36000, 125):
+                alfa = alfa_deg / 100
+                alfa_rad = (alfa * math.pi) / 180
                 x = r * math.cos(alfa_rad)
                 y = r * math.sin(alfa_rad)
                 px = int(siemensX - x)
@@ -183,20 +210,14 @@ class SimensFocus:
                 c = siemens_estimated_position_grey[px, py]
                 contrast.append(c)
                 cv2.circle(siemens_estimated_position, (px, py), 1, (0, 0, 255), 1, 1)  # for debug
-            # print(contrast)
-            circuit = int(2 * math.pi * r)
-            circuit_list.append(circuit)
-            print(f'circuit = {circuit}')
-            # Looking for line-pair only for biggest resolution. In theory it is the same for all radious.
-            if r == max_r:
-                peaks = signal.find_peaks(contrast)
-                peaks_list = list(peaks[0])
-                peaks_qty = len(peaks_list)
-                print(f'number of peaks = {peaks_qty}')
 
-            SFR = peaks_qty / circuit  # SFR is in lp/pixel
-            SFR_list.append(SFR)
-            print(f'SFR = {SFR} lp/pixel')
+
+            # if r > int((w / 2) - 30) and r <= int((w / 2) - 30) +10 :
+            #     sample_contrast = contrast
+
+            if r > 500 and r <= 510 :
+                sample_contrast = contrast
+
             Imax = max(contrast)
             Imin = min(contrast)
             print(f'Imax = {Imax}')
@@ -205,44 +226,6 @@ class SimensFocus:
             MTF.append(Modulation)
             print(f'Modulation = {Modulation}')
 
-        # SFR_list = []
-        # circuit_list = []
-        # MTF = []
-        # for r in range(max_r, 10, -10):
-        #     points = []
-        #     contrast = []
-        #     for alfa_deg in range(1, 360, 1):
-        #         alfa_rad = (alfa_deg*math.pi)/180
-        #         x = r * math.cos(alfa_rad)
-        #         y = r * math.sin(alfa_rad)
-        #         px = int(simensStar_middle_X - x)
-        #         py = int(simensStar_middle_Y - y)
-        #         p = [px, py]
-        #         points.append(p)
-        #         c = target_gray[px, py]
-        #         contrast.append(c)
-        #         cv2.circle(target_tmp, (px, py), 1, (0, 0, 255), 1, 1) #for debug
-        #     #print(contrast)
-        #     circuit = int(2 * math.pi * r)
-        #     circuit_list.append(circuit)
-        #     print(f'circuit = {circuit}')
-        #     #Looking for line-pair only for biggest resolution. In theory it is the same for all radious.
-        #     if r == max_r:
-        #         peaks = signal.find_peaks(contrast)
-        #         peaks_list = list(peaks[0])
-        #         peaks_qty = len(peaks_list)
-        #         print(f'number of peaks = {peaks_qty}')
-        #
-        #     SFR = peaks_qty / circuit #SFR is in lp/pixel
-        #     SFR_list.append(SFR)
-        #     print(f'SFR = {SFR} lp/pixel')
-        #     Imax = max(contrast)
-        #     Imin = min(contrast)
-        #     print(f'Imax = {Imax}')
-        #     print(f'Imin = {Imin}')
-        #     Modulation = (Imax - Imin) / (Imax + Imin)
-        #     MTF.append(Modulation)
-        #     print(f'Modulation = {Modulation}')
 
         plt.figure(1)
         plt.plot(circuit_list, SFR_list)
@@ -261,6 +244,14 @@ class SimensFocus:
         #plt.show()
         plt.savefig('../output/MTF_Middle.png')
 
+        plt.figure(3)
+        plt.plot(sample_contrast)
+        plt.title('Sample contrast')
+        plt.xlabel('Position')
+        plt.ylabel('Contrast')
+        plt.show()
+        plt.savefig('../output/sample_contrast.png')
+
         cv2.imwrite('tmp/siemens_estimated_position.png', siemens_estimated_position)
         cv2.imwrite("tmp/target_tmp.png", target_tmp)
 
@@ -268,6 +259,7 @@ if __name__ == "__main__":
     focusTest = SimensFocus()
     #filename = "..\\output\\target.png"
     #filename = "..\\output\\target_7x5.png"
+    #filename = "..\\output\\test_target_photo - low.png"
     filename = "..\\output\\test_target_photo.png"
     #filename = "..\\output\\target_test.png"
     result = focusTest.middle_focus(filename)
