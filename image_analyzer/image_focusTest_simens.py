@@ -88,11 +88,12 @@ class SimensFocus:
         cv2.drawMarker(target_tmp, (int(marker3_middle_X), int(marker3_middle_Y)), (0, 0, 255), cv2.MARKER_CROSS, 100, 20, 16)
 
         length = marker2_middle_X - marker0_middle_X
-        factor = 2
+        print(f'length = {length}')
+        factor = 3
         middle_size = length/factor
-        print(middle_size)
+        print(f'middle_size = {middle_size}')
         max_r = int((middle_size / 2) - 50)
-        print(max_r)
+        print(f'max_r = {max_r}')
 
 
         line02_mid_point = (int((marker0_middle_point[0]+marker2_middle_point[0])/2), int((marker0_middle_point[1]+marker2_middle_point[1])/2))
@@ -130,15 +131,15 @@ class SimensFocus:
         print(f'w= {w} ; h = {h}')
         res = cv2.matchTemplate(siemens_estimated_position_grey, template, cv2.TM_CCOEFF_NORMED)
 
-        # FOR DEBUG OF MATCH TEMPLATE
-        cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('image', 1920, 1080)
-        cv2.imshow('image', res)
-        key = cv2.waitKey(0)
+        # # FOR DEBUG OF MATCH TEMPLATE
+        #         # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        #         # cv2.resizeWindow('image', 1920, 1080)
+        #         # cv2.imshow('image', res)
+        #         # key = cv2.waitKey(0)
 
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
 
-        threshold = 0.7
+        threshold = 0.55
         maximum = np.amax(res)
         print(maximum)
         loc = np.where(res >= threshold)
@@ -169,15 +170,25 @@ class SimensFocus:
                        cv2.MARKER_CROSS, 20, 4, 2)
         cv2.drawMarker(target_tmp, (int(simensStar_middle_X), int(simensStar_middle_Y)), (0, 255, 0), cv2.MARKER_SQUARE, int(middle_size), 20, 8)
 
+        # # FOR DEBUG OF MARKER POSITIONS
+        # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        # cv2.resizeWindow('image', 1920, 1080)
+        # cv2.imshow('image', target_tmp)
+        # key = cv2.waitKey(0)
+        #
+        # cv2.destroyAllWindows()
+
         SFR_list = []
         circuit_list = []
         MTF = []
         max_r = int((w/2) * 7.5)
         print(max_r)
         Spoke = 144
+        offset = 20
+        step = 25
 
         #Calculation of Circuits
-        for r in range(max_r, int((w/2)-30), -10):
+        for r in range(max_r, int((w/2)-offset), -10):
             circuit = int(2 * math.pi * r)
             circuit_list.append(circuit)
             # print(f'circuit = {circuit}')
@@ -193,12 +204,18 @@ class SimensFocus:
         probe_point_qty = circuit_list[0] * fts  #so it's equal to 2 * spoke
 
         sample_contrast = []
-
-        for r in range(max_r, int((w / 2) - 30), -10):
+        # siemens_estimated_position_grey = cv2.resize(siemens_estimated_position_grey, (2647,2648))
+        # siemens_estimated_position = cv2.resize(siemens_estimated_position, (2647, 2648))
+        print(f'size = {siemens_estimated_position_grey.shape}')
+#TODO: tutaj jest problem !! max_r wynosi 651 a pozniej jest nadpisywane na 1102 i dlatego wywala poza zakres. sprawdzic dlaczego to nadpisuje w wierszu 184
+        for r in range(max_r, int((w / 2) - offset), -10):
             points = []
             contrast = []
+            print("=============================")
+            print(f'Current r = {r}')
+            print("=============================")
 
-            for alfa_deg in range(1, 36000, 125):
+            for alfa_deg in range(1, 2500, step): #125
                 alfa = alfa_deg / 100
                 alfa_rad = (alfa * math.pi) / 180
                 x = r * math.cos(alfa_rad)
@@ -206,17 +223,18 @@ class SimensFocus:
                 px = int(siemensX - x)
                 py = int(siemensY - y)
                 p = [px, py]
+                print(p)
                 points.append(p)
                 c = siemens_estimated_position_grey[px, py]
                 contrast.append(c)
                 cv2.circle(siemens_estimated_position, (px, py), 1, (0, 0, 255), 1, 1)  # for debug
 
 
-            # if r > int((w / 2) - 30) and r <= int((w / 2) - 30) +10 :
-            #     sample_contrast = contrast
-
-            if r > 500 and r <= 510 :
+            if r > int((w / 2) - offset) and r <= int((w / 2) - offset) +10 :
                 sample_contrast = contrast
+
+            # if r > 500 and r <= 510 :
+            #     sample_contrast = contrast
 
             Imax = max(contrast)
             Imin = min(contrast)
@@ -259,7 +277,7 @@ if __name__ == "__main__":
     focusTest = SimensFocus()
     #filename = "..\\output\\target.png"
     #filename = "..\\output\\target_7x5.png"
-    #filename = "..\\output\\test_target_photo - low.png"
-    filename = "..\\output\\test_target_photo.png"
+    filename = "..\\output\\test_target_photo - low.png"
+    #filename = "..\\output\\test_target_photo.png"
     #filename = "..\\output\\target_test.png"
     result = focusTest.middle_focus(filename)
