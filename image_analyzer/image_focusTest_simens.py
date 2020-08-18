@@ -7,11 +7,12 @@ import json
 import math
 import matplotlib.pyplot as plt
 from scipy import signal
+from scipy.signal import argrelextrema
 
 class SimensFocus:
 
 
-    def middle_focus(self, filename):
+    def middle_focus(self, filename, Spoke, offset, step):
         marker = Marker()
         exist = os.path.exists(filename)
         if exist == False:
@@ -89,7 +90,7 @@ class SimensFocus:
 
         length = marker2_middle_X - marker0_middle_X
         print(f'length = {length}')
-        factor = 3
+        factor = 2.2
         middle_size = length/factor
         print(f'middle_size = {middle_size}')
         max_r = int((middle_size / 2) - 50)
@@ -181,11 +182,6 @@ class SimensFocus:
         SFR_list = []
         circuit_list = []
         MTF = []
-        max_r = int((w/2) * 7.5)
-        print(max_r)
-        Spoke = 144
-        offset = 20
-        step = 25
 
         #Calculation of Circuits
         for r in range(max_r, int((w/2)-offset), -10):
@@ -207,7 +203,6 @@ class SimensFocus:
         # siemens_estimated_position_grey = cv2.resize(siemens_estimated_position_grey, (2647,2648))
         # siemens_estimated_position = cv2.resize(siemens_estimated_position, (2647, 2648))
         print(f'size = {siemens_estimated_position_grey.shape}')
-#TODO: tutaj jest problem !! max_r wynosi 651 a pozniej jest nadpisywane na 1102 i dlatego wywala poza zakres. sprawdzic dlaczego to nadpisuje w wierszu 184
         for r in range(max_r, int((w / 2) - offset), -10):
             points = []
             contrast = []
@@ -215,7 +210,7 @@ class SimensFocus:
             print(f'Current r = {r}')
             print("=============================")
 
-            for alfa_deg in range(1, 2500, step): #125
+            for alfa_deg in range(1, 36000, step): #125
                 alfa = alfa_deg / 100
                 alfa_rad = (alfa * math.pi) / 180
                 x = r * math.cos(alfa_rad)
@@ -223,7 +218,6 @@ class SimensFocus:
                 px = int(siemensX - x)
                 py = int(siemensY - y)
                 p = [px, py]
-                print(p)
                 points.append(p)
                 c = siemens_estimated_position_grey[px, py]
                 contrast.append(c)
@@ -232,9 +226,35 @@ class SimensFocus:
 
             if r > int((w / 2) - offset) and r <= int((w / 2) - offset) +10 :
                 sample_contrast = contrast
+                # max_peek = signal.find_peaks(contrast, (100, 255))
+                # print(max_peek)
+                # min_peek = signal.find_peaks(contrast,(100, 0))
+                # print(min_peek)
+
+                # You could
+                # also
+                # smooth
+                # your
+                # array
+                # before
+                # this
+                # step
+                # using
+                # numpy.convolve().
+                #TODO: sprawdzić czy te exstrema dobrze znajduje i sprawdzic to smooth signal
+
+                # for local maxima
+                min_extrema = argrelextrema(np.array(contrast, dtype=int), np.greater)
+                print(f'min = {min_extrema}')
+
+                # for local minima
+                max_extrema = argrelextrema(np.array(contrast, dtype=int), np.less)
+                print(f'max = {max_extrema}')
 
             # if r > 500 and r <= 510 :
             #     sample_contrast = contrast
+
+
 
             Imax = max(contrast)
             Imin = min(contrast)
@@ -275,9 +295,12 @@ class SimensFocus:
 
 if __name__ == "__main__":
     focusTest = SimensFocus()
+    Spoke = 144
+    offset = 50
+    step = 25
     #filename = "..\\output\\target.png"
     #filename = "..\\output\\target_7x5.png"
     filename = "..\\output\\test_target_photo - low.png"
     #filename = "..\\output\\test_target_photo.png"
     #filename = "..\\output\\target_test.png"
-    result = focusTest.middle_focus(filename)
+    result = focusTest.middle_focus(filename, Spoke, offset, step)
