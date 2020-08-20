@@ -13,6 +13,34 @@ class SimensFocus:
 
 
     def middle_focus(self, filename, Spoke, offset, step):
+
+        def smooth(x, window_len=11, window='hamming'):
+            """smooth the data using a window with requested size.
+            """
+
+            if x.ndim != 1:
+                raise ValueError("smooth only accepts 1 dimension arrays.")
+
+            if x.size < window_len:
+                raise ValueError("Input vector needs to be bigger than window size.")
+
+            if window_len < 3:
+                return x
+
+            if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+                raise ValueError("Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
+
+            s = np.r_[x[window_len - 1:0:-1], x, x[-2:-window_len - 1:-1]]
+            # print(len(s))
+            if window == 'flat':  # moving average
+                w = np.ones(window_len, 'd')
+            else:
+                w = eval('np.' + window + '(window_len)')
+
+            y = np.convolve(w / w.sum(), s, mode='valid')
+            return y
+
+
         marker = Marker()
         exist = os.path.exists(filename)
         if exist == False:
@@ -223,41 +251,32 @@ class SimensFocus:
                 contrast.append(c)
                 cv2.circle(siemens_estimated_position, (px, py), 1, (0, 0, 255), 1, 1)  # for debug
 
+            #Smoothing signal using
+            smooth_contrast = smooth(np.array(contrast, dtype=int))
 
             if r > int((w / 2) - offset) and r <= int((w / 2) - offset) +10 :
                 sample_contrast = contrast
+                sample_contrast_smooth = smooth(np.array(sample_contrast, dtype=int))
                 # max_peek = signal.find_peaks(contrast, (100, 255))
                 # print(max_peek)
-                # min_peek = signal.find_peaks(contrast,(100, 0))
-                # print(min_peek)
 
-                # You could
-                # also
-                # smooth
-                # your
-                # array
-                # before
-                # this
-                # step
-                # using
-                # numpy.convolve().
-                #TODO: sprawdzić czy te exstrema dobrze znajduje i sprawdzic to smooth signal
+                #TODO: sprawdzić czy te exstrema dobrze znajduje
 
                 # for local maxima
-                min_extrema = argrelextrema(np.array(contrast, dtype=int), np.greater)
-                print(f'min = {min_extrema}')
+                # min_extrema = argrelextrema(np.array(contrast, dtype=int), np.greater)
+                # print(f'min = {min_extrema}')
 
                 # for local minima
-                max_extrema = argrelextrema(np.array(contrast, dtype=int), np.less)
-                print(f'max = {max_extrema}')
+                # max_extrema = argrelextrema(np.array(contrast, dtype=int), np.less)
+                # print(f'max = {max_extrema}')
 
             # if r > 500 and r <= 510 :
             #     sample_contrast = contrast
 
 
-
-            Imax = max(contrast)
-            Imin = min(contrast)
+            #TODO: wykres jest lepszy. ale ma duzo wachniec. sprobwowac nie min ale srednia z min
+            Imax = max(smooth_contrast)
+            Imin = min(smooth_contrast)
             print(f'Imax = {Imax}')
             print(f'Imin = {Imin}')
             Modulation = (Imax - Imin) / (Imax + Imin)
@@ -270,7 +289,6 @@ class SimensFocus:
         plt.title('SFR / Circuit ')
         plt.xlabel('Circuit [pixel]')
         plt.ylabel('SFR [lp/pixel]')
-        #plt.show()
         plt.savefig('../output/SFR_middle_simens.png')
 
 
@@ -279,16 +297,16 @@ class SimensFocus:
         plt.title('MTF Middle')
         plt.xlabel('SFR [lp/pixel]')
         plt.ylabel('MTF')
-        #plt.show()
         plt.savefig('../output/MTF_Middle.png')
 
         plt.figure(3)
-        plt.plot(sample_contrast)
-        plt.title('Sample contrast')
+        plt.plot(sample_contrast_smooth)
+        plt.title('Sample contrast smooth')
         plt.xlabel('Position')
         plt.ylabel('Contrast')
+        plt.savefig('../output/sample_contrast_smooth.png')
+
         plt.show()
-        plt.savefig('../output/sample_contrast.png')
 
         cv2.imwrite('tmp/siemens_estimated_position.png', siemens_estimated_position)
         cv2.imwrite("tmp/target_tmp.png", target_tmp)
