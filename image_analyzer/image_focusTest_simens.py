@@ -257,26 +257,46 @@ class SimensFocus:
             if r > int((w / 2) - offset) and r <= int((w / 2) - offset) +10 :
                 sample_contrast = contrast
                 sample_contrast_smooth = smooth(np.array(sample_contrast, dtype=int))
+                # print("!!! PEEEK METHOD !!!")
                 # max_peek = signal.find_peaks(contrast, (100, 255))
                 # print(max_peek)
 
-                #TODO: sprawdzić czy te exstrema dobrze znajduje
+                # for local min
+                min_extrema_sample = argrelextrema(np.array(sample_contrast_smooth, dtype=int), np.greater)
+                #print(f'min = {min_extrema}')
+                for values in min_extrema_sample:
+                    for value in values:
+                        min_values_sample = sample_contrast_smooth.item(value)
+                # print(f'average = {np.average(min_values_sample)}')
 
-                # for local maxima
-                # min_extrema = argrelextrema(np.array(contrast, dtype=int), np.greater)
-                # print(f'min = {min_extrema}')
 
-                # for local minima
-                # max_extrema = argrelextrema(np.array(contrast, dtype=int), np.less)
-                # print(f'max = {max_extrema}')
+                # for local max
+                max_extrema = argrelextrema(np.array(sample_contrast_smooth, dtype=int), np.less)
+                #print(f'max = {max_extrema}')
 
             # if r > 500 and r <= 510 :
             #     sample_contrast = contrast
 
 
-            #TODO: wykres jest lepszy. ale ma duzo wachniec. sprobwowac nie min ale srednia z min
-            Imax = max(smooth_contrast)
-            Imin = min(smooth_contrast)
+            #TODO: z tym Imax = average_max to nie dziala. lepiej dzialalao z max(smooth_contrast). moze sprobowac zrobic FFT z smooth_contrast i z tego wykres ? albo probowac wybrac jedno przejscie z ciemego na jasne zamiast sredniej czy min lub max. Tak zeby miec jedno LSF
+            min_extrema = argrelextrema(np.array(smooth_contrast, dtype=int), np.less)
+            for values in min_extrema:
+                for value in values:
+                    min_values = smooth_contrast.item(value)
+            average_min = np.average(min_values)
+            print(f'average_min = {average_min}')
+
+            max_extrema = argrelextrema(np.array(smooth_contrast, dtype=int), np.greater)
+            for values in max_extrema:
+                for value in values:
+                    max_values = smooth_contrast.item(value)
+            average_max = np.average(max_values)
+            print(f'average_max = {average_max}')
+
+            # Imax = max(smooth_contrast)
+            # Imin = min(smooth_contrast)
+            Imax = average_max
+            Imin = average_min
             print(f'Imax = {Imax}')
             print(f'Imin = {Imin}')
             Modulation = (Imax - Imin) / (Imax + Imin)
@@ -284,18 +304,20 @@ class SimensFocus:
             print(f'Modulation = {Modulation}')
 
 
+        smooth_MTF = np.array(MTF, dtype=float)
+        smooth_MTF = smooth(smooth_MTF)
+
         plt.figure(1)
-        plt.plot(circuit_list, SFR_list)
-        plt.title('SFR / Circuit ')
-        plt.xlabel('Circuit [pixel]')
-        plt.ylabel('SFR [lp/pixel]')
-        plt.savefig('../output/SFR_middle_simens.png')
-
-
-        plt.figure(2)
         plt.plot(SFR_list, MTF)
         plt.title('MTF Middle')
         plt.xlabel('SFR [lp/pixel]')
+        plt.ylabel('MTF')
+        plt.savefig('../output/MTF_Middle.png')
+
+
+        plt.figure(2)
+        plt.plot(smooth_MTF)
+        plt.title('smooth_MTF')
         plt.ylabel('MTF')
         plt.savefig('../output/MTF_Middle.png')
 
