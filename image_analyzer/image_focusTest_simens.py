@@ -12,9 +12,9 @@ from scipy.signal import argrelextrema
 class SimensFocus:
 
 
-    def middle_focus(self, filename, Spoke, offset, step):
+    def middle_focus(self, filename, Spoke, offset, step, threshold):
 
-        def smooth(x, window_len=11, window='hamming'):
+        def smooth(x, window_len=7, window='hamming'):
             """smooth the data using a window with requested size.
             """
 
@@ -153,32 +153,39 @@ class SimensFocus:
                                      int(simensStar_middle_X - (middle_size/2)-50):int(simensStar_middle_X + (middle_size/2)+50)]
 
         siemens_estimated_position_grey = cv2.cvtColor(siemens_estimated_position, cv2.COLOR_BGR2GRAY)
-        #template = cv2.imread('./image/pizza_marker.png')
-        template = cv2.imread('./image/template.PNG')
+
+
+        template = cv2.imread('./image/pizza_marker.png')
+        # template = cv2.imread('./image/template.PNG')
         template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
         w, h = template.shape[::-1]
         print(f'w= {w} ; h = {h}')
         res = cv2.matchTemplate(siemens_estimated_position_grey, template, cv2.TM_CCOEFF_NORMED)
 
         # # FOR DEBUG OF MATCH TEMPLATE
-        #         # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-        #         # cv2.resizeWindow('image', 1920, 1080)
-        #         # cv2.imshow('image', res)
-        #         # key = cv2.waitKey(0)
-
+        # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+        # cv2.resizeWindow('image', 1920, 1080)
+        # cv2.imshow('image', res)
+        # key = cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-        threshold = 0.55
         maximum = np.amax(res)
         print(maximum)
         loc = np.where(res >= threshold)
         print(loc)
 
+        loc_max = np.where(res == maximum)
+        print(loc_max)
+
         if loc[0].size == 0:
             raise ValueError('Mach template array is empty ! Template not found')
 
-        for pt in zip(*loc[::-1]):
-            # cv2.rectangle(siemens_estimated_position, pt, (pt[0] + w, pt[1] + h), (0, 0, 255), 2)
+        # for pt in zip(*loc[::-1]):
+        #     cv2.drawMarker(siemens_estimated_position, (pt[0]+int(w/2), pt[1]+int(h/2)), (0,0,255), cv2.MARKER_CROSS, 20, 4, 2)
+        #     siemensX = pt[0]+int(w/2)
+        #     siemensY = pt[1]+int(h/2)
+
+        for pt in zip(*loc_max[::-1]):
             cv2.drawMarker(siemens_estimated_position, (pt[0]+int(w/2), pt[1]+int(h/2)), (0,0,255), cv2.MARKER_CROSS, 20, 4, 2)
             siemensX = pt[0]+int(w/2)
             siemensY = pt[1]+int(h/2)
@@ -257,9 +264,6 @@ class SimensFocus:
             if r > int((w / 2) - offset) and r <= int((w / 2) - offset) +10 :
                 sample_contrast = contrast
                 sample_contrast_smooth = smooth(np.array(sample_contrast, dtype=int))
-                # print("!!! PEEEK METHOD !!!")
-                # max_peek = signal.find_peaks(contrast, (100, 255))
-                # print(max_peek)
 
                 # for local min
                 min_extrema_sample = argrelextrema(np.array(sample_contrast_smooth, dtype=int), np.greater)
@@ -274,27 +278,41 @@ class SimensFocus:
                 max_extrema = argrelextrema(np.array(sample_contrast_smooth, dtype=int), np.less)
                 #print(f'max = {max_extrema}')
 
-            # if r > 500 and r <= 510 :
-            #     sample_contrast = contrast
+
+            if r == max_r:
+                contrast_max = contrast
+                print(contrast_max)
+                smooth_max = smooth(np.array(contrast, dtype=int), window_len=7)
+                print(smooth_max)
+
+            min_values = []
+            max_values = []
 
 
-            #TODO: z tym Imax = average_max to nie dziala. lepiej dzialalao z max(smooth_contrast). moze sprobowac zrobic FFT z smooth_contrast i z tego wykres ? albo probowac wybrac jedno przejscie z ciemego na jasne zamiast sredniej czy min lub max. Tak zeby miec jedno LSF
             min_extrema = argrelextrema(np.array(smooth_contrast, dtype=int), np.less)
             for values in min_extrema:
                 for value in values:
-                    min_values = smooth_contrast.item(value)
+                    min_values.append(smooth_contrast.item(value))
+
             average_min = np.average(min_values)
+            std_min = np.std(min_values)
             print(f'average_min = {average_min}')
+            print(f'std_min = {std_min}')
+            # print(f'minimum values are : {min_values}')
+
 
             max_extrema = argrelextrema(np.array(smooth_contrast, dtype=int), np.greater)
             for values in max_extrema:
                 for value in values:
-                    max_values = smooth_contrast.item(value)
+                    max_values.append(smooth_contrast.item(value))
             average_max = np.average(max_values)
+            std_max = np.std(max_values)
             print(f'average_max = {average_max}')
+            print(f'std_max = {std_max}')
+            # print(f'maximum values are : {max_values}')
 
-            # Imax = max(smooth_contrast)
-            # Imin = min(smooth_contrast)
+            print(f'max found = {max(smooth_contrast)}')
+            print(f'min found = {min(smooth_contrast)}')
             Imax = average_max
             Imin = average_min
             print(f'Imax = {Imax}')
@@ -304,9 +322,6 @@ class SimensFocus:
             print(f'Modulation = {Modulation}')
 
 
-        smooth_MTF = np.array(MTF, dtype=float)
-        smooth_MTF = smooth(smooth_MTF)
-
         plt.figure(1)
         plt.plot(SFR_list, MTF)
         plt.title('MTF Middle')
@@ -314,33 +329,41 @@ class SimensFocus:
         plt.ylabel('MTF')
         plt.savefig('../output/MTF_Middle.png')
 
-
         plt.figure(2)
-        plt.plot(smooth_MTF)
-        plt.title('smooth_MTF')
-        plt.ylabel('MTF')
-        plt.savefig('../output/MTF_Middle.png')
-
-        plt.figure(3)
         plt.plot(sample_contrast_smooth)
         plt.title('Sample contrast smooth')
         plt.xlabel('Position')
         plt.ylabel('Contrast')
         plt.savefig('../output/sample_contrast_smooth.png')
 
+        plt.figure(3)
+        plt.plot(contrast_max)
+        plt.title('Contrast max')
+        plt.xlabel('Position')
+        plt.ylabel('Contrast')
+
+        plt.figure(4)
+        plt.plot(smooth_max)
+        plt.title('smooth_max')
+        plt.xlabel('Position')
+        plt.ylabel('Contrast')
+
         plt.show()
 
         cv2.imwrite('tmp/siemens_estimated_position.png', siemens_estimated_position)
         cv2.imwrite("tmp/target_tmp.png", target_tmp)
+        cv2.imwrite("tmp/simens_gray.png", siemens_estimated_position_grey)
 
 if __name__ == "__main__":
     focusTest = SimensFocus()
     Spoke = 144
-    offset = 50
+    offset = -20
     step = 25
-    #filename = "..\\output\\target.png"
-    #filename = "..\\output\\target_7x5.png"
-    filename = "..\\output\\test_target_photo - low.png"
-    #filename = "..\\output\\test_target_photo.png"
-    #filename = "..\\output\\target_test.png"
-    result = focusTest.middle_focus(filename, Spoke, offset, step)
+    threshold = 0.70
+    # zdjecie ze slaba jakoscia
+    #filename = "..\\output\\test_target_photo - low.png"
+    # zdjecie targetu
+    filename = "..\\output\\test_target_photo.png"
+    # aktualnie uzywany test target
+    # filename = "..\\output\\target_test.png" #dla tego działa dobrze
+    result = focusTest.middle_focus(filename, Spoke, offset, step, threshold)
