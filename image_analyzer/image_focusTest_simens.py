@@ -261,29 +261,22 @@ class SimensFocus:
             #Smoothing signal using
             smooth_contrast = smooth(np.array(contrast, dtype=int))
 
+            #FOR DEBUG
             if r > int((w / 2) - offset) and r <= int((w / 2) - offset) +10 :
                 sample_contrast = contrast
                 sample_contrast_smooth = smooth(np.array(sample_contrast, dtype=int))
+                #fft_smooth_sample = np.fft.rfft(sample_contrast_smooth)
 
-                # for local min
-                min_extrema_sample = argrelextrema(np.array(sample_contrast_smooth, dtype=int), np.greater)
-                #print(f'min = {min_extrema}')
-                for values in min_extrema_sample:
-                    for value in values:
-                        min_values_sample = sample_contrast_smooth.item(value)
-                # print(f'average = {np.average(min_values_sample)}')
-
-
-                # for local max
-                max_extrema = argrelextrema(np.array(sample_contrast_smooth, dtype=int), np.less)
-                #print(f'max = {max_extrema}')
-
-
+            #FOR DEBUG
             if r == max_r:
                 contrast_max = contrast
-                print(contrast_max)
+                #print(contrast_max)
                 smooth_max = smooth(np.array(contrast, dtype=int), window_len=7)
-                print(smooth_max)
+                #fft_smooth_max = np.fft.rfft(contrast_max)
+                #print(smooth_max)
+                # print("!!! FFT !!!")
+                # print(fft_smooth_max)
+
 
             min_values = []
             max_values = []
@@ -348,11 +341,20 @@ class SimensFocus:
         plt.xlabel('Position')
         plt.ylabel('Contrast')
 
+        # plt.figure(5)
+        # plt.plot(fft_smooth_max)
+        # plt.title('FFT smooth max')
+        #
+        # plt.figure(6)
+        # plt.plot(fft_smooth_sample)
+        # plt.title('FFT smooth sample')
+
         plt.show()
 
         cv2.imwrite('tmp/siemens_estimated_position.png', siemens_estimated_position)
         cv2.imwrite("tmp/target_tmp.png", target_tmp)
         cv2.imwrite("tmp/simens_gray.png", siemens_estimated_position_grey)
+
 
 if __name__ == "__main__":
     focusTest = SimensFocus()
