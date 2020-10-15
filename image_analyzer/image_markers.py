@@ -112,7 +112,7 @@ if __name__ == "__main__":
     #marker.save_marker(file_path)
 
     #positions = marker.find_marker_position("../output/snap.png", show_image= True)
-    positions = marker.find_marker_position("../output/target_photo.png", show_image=True)
-    print(positions)
+    #positions = marker.find_marker_position("../output/target_photo.png", show_image=True)
+    #print(positions)
 
-    #marker.show_marker_live(0, snap_path="../output/snap_live.png", markers_path='../output/markers.txt')
+    marker.show_marker_live(0, snap_path="../output/snap_live.png", markers_path='../output/markers.txt')

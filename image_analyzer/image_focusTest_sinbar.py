@@ -43,19 +43,28 @@ class SinBar_focus:
         print(contrast_image)
 
         #TODO: zrobic sygnal odp za sfr na podstawie log z tej strony nowej
+        sfr_min = 2 #[lp/mm]
+        sfr_max = 200 #[lp/mm]
+
+        xmax = x_dim - 10
+
+        for x in range(1, xmax, 1):
+            pass
+
+
 
         plt.figure(1)
         plt.plot(contrast_object)
         plt.title("Contrast Object")
-        plt.xlabel("Contrast")
-        plt.ylabel('Position')
+        plt.xlabel("Position")
+        plt.ylabel('Contrast')
         plt.savefig("../output/bar_object_contrast")
 
         plt.figure(2)
         plt.plot(contrast_image)
         plt.title("Contrast Image")
-        plt.xlabel("Contrast")
-        plt.ylabel('Position')
+        plt.xlabel("Position")
+        plt.ylabel('Contrast')
         plt.savefig("../output/bar_image_contrast")
 
 
