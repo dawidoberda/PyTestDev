@@ -1,0 +1,1 @@
+from test_suite.automatic_test import Automatic_Test
