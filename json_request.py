@@ -40,9 +40,8 @@ def post_request_from_config(tests_dir, test_seq):
             automatic_test.add_step(step)
 
             step_file = os.path.join(tests_dir, step+".txt")
-            #print(step_file)
+
             exist = os.path.exists(step_file)
-            #print(exist)
 
             if not exist:
                 print("file not found !!")
@@ -137,8 +136,34 @@ def post_request_from_config(tests_dir, test_seq):
         elif type_of_test == 'configure':
             print('configure')
 
+        #WRITE-READ STEP
+        elif type_of_test == "write-read":
+            print("Write-Read")
+            automatic_test.add_step(step)
+
+            step_generic = str(step).split("_")
+            step_name = step_generic[0]
+
+            step_write_file = os.path.join(tests_dir, step_name+"_write.txt")
+            step_read_file = os.path.join(tests_dir, step_name + "_read.txt")
+
+            exist_write = os.path.exists(step_write_file)
+            exist_read = os.path.exists(step_read_file)
+
+            if not exist_write:
+                print("write file not found !!")
+                exit(1)
+
+            if not exist_read:
+                print("read file not found !!")
+                exit(1)
+
+
+
         print("===================================")
     print(automatic_test.return_results())
+    #TODO: wszedzie gdzie jest exit(0) to dodac logowanie testu typu error
+    # TODO: dokonczyc obsluge write-read step, teraz bedzie czytanie json z requestem do write i read
 
 if __name__ == "__main__":
     tests_dir = "C:\\Users\\oberdad\\OneDrive - Jabil\\Dawid\\TE\\Axis\\json_req\\tests"

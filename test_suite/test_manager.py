@@ -1,0 +1,1 @@
+#tutaj zrobic logowanie nr seryjnego i laczenie wynikow testow manualnych i automatycznych i zapisywanie do bazy danych

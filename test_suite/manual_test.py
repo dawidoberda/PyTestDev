@@ -1,0 +1,1 @@
+#tutaj zrobic test polegajacy na tym ze cos jest zapisywane i operator musi dac input

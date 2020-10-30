@@ -1,0 +1,1 @@
+#tutaj zrobic obsluge krokow configuracyjnych
