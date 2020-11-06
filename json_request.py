@@ -4,6 +4,7 @@ import requests
 import os
 import re
 import test_suite
+import time
 
 
 
@@ -159,11 +160,100 @@ def post_request_from_config(tests_dir, test_seq):
                 exit(1)
 
 
+            try:
+                with open(step_write_file) as f:
+                    request_write = json.load(f)
+            except FileNotFoundError as fnfe:
+                print(str(fnfe))
+                exit(1)
+
+            try:
+                with open(step_read_file) as f:
+                    request_read = json.load(f)
+            except FileNotFoundError as fnfe:
+                print(str(fnfe))
+                exit(1)
+
+            response = requests.post('http://192.168.0.90/axis-cgi/papi/commands', json=request_write)
+
+            print("Status code: ", response.status_code)
+
+            print("Wait for 3 seconds after posting write request..")
+            time.sleep(3)
+
+            response = requests.post('http://192.168.0.90/axis-cgi/papi/commands', json=request_read)
+
+            print("Status code: ", response.status_code)
+            print("Printing Entire Post Request")
+            print(response.json())
+
+            #CHECKING CONDITIONS
+            condition_file = os.path.join(tests_dir,"conditions",step+"_condition.txt")
+            exist = os.path.exists(condition_file)
+
+            if not exist:
+                print("condition file is not exist!")
+                exit(1)
+
+            try:
+                with open(condition_file) as f:
+                    condition = json.load(f)
+            except FileNotFoundError as fnfe:
+                print(str(fnfe))
+                exit(1)
+
+            condition_keys = condition.keys()
+
+            condition_to_check_list = []
+
+            for key in condition_keys:
+                actual_condition = condition.get(key)
+
+                if type(actual_condition) == dict:
+                    for inner_key in actual_condition.keys():
+                        condition_to_check_list.append(actual_condition)
+                else:
+                    condition_to_check_list.append({key: actual_condition})
+
+            print(f'coditions to check : {condition_to_check_list}')
+
+            #Looking for condition in response
+            for condition in condition_to_check_list:
+                expected_key = str(condition.keys())
+
+                a_string = expected_key
+                result = re.search(r"\(\[\'([A-Za-z0-9-]+)\'\]\)", a_string)
+                expected_key = result.group(1)
+
+                print(f'expected key is {expected_key}')
+                expected_value = condition.get(expected_key)
+                print(f'expected value for this key is {expected_value}')
+
+                #Testing for value
+                response_json = response.json()
+                response_dict = response_json.get('data')
+
+                response_msg = str(response_dict)
+
+
+                if expected_value == "True" or str(expected_value).isnumeric():
+                    searched_string = f'\'{expected_key}\': {expected_value}'
+                else:
+                    searched_string = f'\'{expected_key}\': \'{expected_value}\''
+
+                test_search = response_msg.find(str(searched_string))
+
+                if not test_search == -1:
+                    automatic_test.test_result(step, 'PASS')
+                else:
+                    automatic_test.test_result(step, "FAIL", fail_code="Condition not fulfilled")
+
+
 
         print("===================================")
     print(automatic_test.return_results())
-    #TODO: wszedzie gdzie jest exit(0) to dodac logowanie testu typu error
-    # TODO: dokonczyc obsluge write-read step, teraz bedzie czytanie json z requestem do write i read
+    #TODO: wszedzie gdzie jest exit(1) to dodac logowanie testu typu error
+    # TODO: dokonczyc obsluge write-read step, chyba gotowe ale sprawdzic
 
 if __name__ == "__main__":
     tests_dir = "C:\\Users\\oberdad\\OneDrive - Jabil\\Dawid\\TE\\Axis\\json_req\\tests"
