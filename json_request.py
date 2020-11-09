@@ -13,6 +13,11 @@ def post_request_from_config(tests_dir, test_seq):
     step_list = []
     automatic_test = test_suite.automatic_test.Automatic_Test()
 
+    test_manager = test_suite.test_manager.Test_Manager()
+    test_manager.start_test(True)
+
+    configure_test = test_suite.configure_test.Configure_Test()
+
     #LOADING TEST SEQ
 
     try:
@@ -46,6 +51,7 @@ def post_request_from_config(tests_dir, test_seq):
 
             if not exist:
                 print("file not found !!")
+                automatic_test.test_result(step, "ERROR", fail_code="file not found")
                 exit(1)
 
             try:
@@ -53,6 +59,7 @@ def post_request_from_config(tests_dir, test_seq):
                     request = json.load(f)
             except FileNotFoundError as fnfe:
                 print(str(fnfe))
+                automatic_test.test_result(step, "ERROR", fail_code="file not found")
                 exit(1)
 
             #print(request)
@@ -70,6 +77,7 @@ def post_request_from_config(tests_dir, test_seq):
 
             if not exist:
                 print("condition file is not exist!")
+                automatic_test.test_result(step, "ERROR", fail_code="condition file is not exist!")
                 exit(1)
 
             try:
@@ -77,6 +85,7 @@ def post_request_from_config(tests_dir, test_seq):
                     condition = json.load(f)
             except FileNotFoundError as fnfe:
                 print(str(fnfe))
+                automatic_test.test_result(step, "ERROR", fail_code="file not found")
                 exit(1)
 
             condition_keys = condition.keys()
@@ -86,12 +95,9 @@ def post_request_from_config(tests_dir, test_seq):
 
             for key in condition_keys:
                 actual_condition = condition.get(key)
-                #print(actual_condition)
-                #print(type(actual_condition))
 
                 if type(actual_condition) == dict:
                     for inner_key in actual_condition.keys():
-                        #print(inner_key)
                         condition_to_check_list.append(actual_condition)
                 else:
                     condition_to_check_list.append({key: actual_condition})
@@ -115,13 +121,12 @@ def post_request_from_config(tests_dir, test_seq):
                 response_dict = response_json.get('data')
 
                 response_msg = str(response_dict)
-                #print(expected_key)
-                #print(expected_value)
+
                 if expected_value == "True":
                     searched_string = f'\'{expected_key}\': {expected_value}'
                 else:
                     searched_string = f'\'{expected_key}\': \'{expected_value}\''
-                #print(searched_string)
+
                 test_search = response_msg.find(str(searched_string))
 
                 if not test_search == -1:
@@ -153,10 +158,12 @@ def post_request_from_config(tests_dir, test_seq):
 
             if not exist_write:
                 print("write file not found !!")
+                automatic_test.test_result(step, "ERROR", fail_code="write file not found !!")
                 exit(1)
 
             if not exist_read:
                 print("read file not found !!")
+                automatic_test.test_result(step, "ERROR", fail_code="write file not found !!")
                 exit(1)
 
 
@@ -165,6 +172,7 @@ def post_request_from_config(tests_dir, test_seq):
                     request_write = json.load(f)
             except FileNotFoundError as fnfe:
                 print(str(fnfe))
+                automatic_test.test_result(step, "ERROR", fail_code="write file not found !!")
                 exit(1)
 
             try:
@@ -172,6 +180,7 @@ def post_request_from_config(tests_dir, test_seq):
                     request_read = json.load(f)
             except FileNotFoundError as fnfe:
                 print(str(fnfe))
+                automatic_test.test_result(step, "ERROR", fail_code="write file not found !!")
                 exit(1)
 
             response = requests.post('http://192.168.0.90/axis-cgi/papi/commands', json=request_write)
@@ -193,6 +202,7 @@ def post_request_from_config(tests_dir, test_seq):
 
             if not exist:
                 print("condition file is not exist!")
+                automatic_test.test_result(step, "ERROR", fail_code="condition file is not exist!")
                 exit(1)
 
             try:
@@ -200,6 +210,7 @@ def post_request_from_config(tests_dir, test_seq):
                     condition = json.load(f)
             except FileNotFoundError as fnfe:
                 print(str(fnfe))
+                automatic_test.test_result(step, "ERROR", fail_code="condition file is not exist!")
                 exit(1)
 
             condition_keys = condition.keys()
@@ -251,9 +262,17 @@ def post_request_from_config(tests_dir, test_seq):
 
 
         print("===================================")
-    print(automatic_test.return_results())
-    #TODO: wszedzie gdzie jest exit(1) to dodac logowanie testu typu error
-    # TODO: dokonczyc obsluge write-read step, chyba gotowe ale sprawdzic
+
+    automatic_results = None
+    configure_results = None
+
+    if automatic_test.return_results() != None:
+        automatic_results = automatic_test.return_results()
+    if configure_test.return_results() !=None:
+        configure_results = configure_test.return_results()
+
+    test_manager.stop_test(automatic_test_results=automatic_results, configure_test_results=configure_results)
+    #TODO: dodac reszte testow i PAPI
 
 if __name__ == "__main__":
     tests_dir = "C:\\Users\\oberdad\\OneDrive - Jabil\\Dawid\\TE\\Axis\\json_req\\tests"

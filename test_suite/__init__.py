@@ -1,1 +1,3 @@
 from test_suite.automatic_test import Automatic_Test
+from test_suite.test_manager import Test_Manager
+from test_suite.configure_test import Configure_Test
