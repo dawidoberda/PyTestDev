@@ -14,7 +14,7 @@ def post_request_from_config(tests_dir, test_seq):
     automatic_test = test_suite.automatic_test.Automatic_Test()
 
     test_manager = test_suite.test_manager.Test_Manager()
-    test_manager.start_test(True)
+    test_manager.start_test(False, serial_number="test_1234")
 
     configure_test = test_suite.configure_test.Configure_Test()
 
@@ -260,18 +260,22 @@ def post_request_from_config(tests_dir, test_seq):
                     automatic_test.test_result(step, "FAIL", fail_code="Condition not fulfilled")
 
 
-
+        #print(automatic_test.return_results())
         print("===================================")
+
+    #TODO: przerobic test_manager tak aby wspolpracowal z tym outputem w formie zapytania z bazy danych
+    for row in automatic_test.return_results():
+        print(row)
 
     automatic_results = None
     configure_results = None
 
-    if automatic_test.return_results() != None:
-        automatic_results = automatic_test.return_results()
-    if configure_test.return_results() !=None:
-        configure_results = configure_test.return_results()
-
-    test_manager.stop_test(automatic_test_results=automatic_results, configure_test_results=configure_results)
+    # if automatic_test.return_results() != None:
+    #     automatic_results = automatic_test.return_results()
+    # if configure_test.return_results() !=None:
+    #     configure_results = configure_test.return_results()
+    #
+    # test_manager.stop_test(automatic_test_results=automatic_results, configure_test_results=configure_results)
     #TODO: dodac reszte testow i PAPI
 
 if __name__ == "__main__":
