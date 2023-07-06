@@ -15,7 +15,7 @@ pyserial==3.4
 python-dateutil==2.8.1
 PyVISA==1.10.1
 pyzbar==0.1.8
-scipy==1.5.2
+scipy==1.10.0
 six==1.15.0
 sounddevice==0.4.0
 SoundFile==0.10.3.post1
